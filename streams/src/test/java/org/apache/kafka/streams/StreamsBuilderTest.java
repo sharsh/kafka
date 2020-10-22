@@ -39,6 +39,7 @@ import org.apache.kafka.streams.kstream.ValueTransformerWithKey;
 import org.apache.kafka.streams.processor.StateStore;
 import org.apache.kafka.streams.processor.api.Processor;
 import org.apache.kafka.streams.processor.api.ProcessorContext;
+import org.apache.kafka.streams.processor.api.Record;
 import org.apache.kafka.streams.processor.internals.InternalTopologyBuilder;
 import org.apache.kafka.streams.processor.internals.ProcessorNode;
 import org.apache.kafka.streams.processor.internals.ProcessorTopology;
@@ -102,12 +103,12 @@ public class StreamsBuilderTest {
                 @SuppressWarnings("unchecked")
                 @Override
                 public void init(final ProcessorContext<Void, Void> context) {
-                    store = (KeyValueStore<String, String>) context.getStateStore("store");
+                    store = context.getStateStore("store");
                 }
 
                 @Override
-                public void process(final String key, final String value) {
-                    store.put(key, value);
+                public void process(final Record<String, String> record) {
+                    store.put(record.key(), record.value());
                 }
             }
         );

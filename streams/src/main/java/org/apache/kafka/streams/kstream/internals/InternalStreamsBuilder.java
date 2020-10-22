@@ -127,7 +127,7 @@ public class InternalStreamsBuilder implements InternalNameProvider {
             .orElseGenerateWithPrefix(this, KTableImpl.SOURCE_NAME);
 
         final KTableSource<K, V> tableSource = new KTableSource<>(materialized.storeName(), materialized.queryableStoreName());
-        final ProcessorParameters<K, V> processorParameters = new ProcessorParameters<>(tableSource, tableSourceName);
+        final ProcessorParameters<K, V, ?, ?> processorParameters = new ProcessorParameters<>(tableSource, tableSourceName);
 
         final TableSourceNode<K, V> tableSourceNode = TableSourceNode.<K, V>tableSourceNodeBuilder()
             .withTopic(topic)
@@ -170,7 +170,7 @@ public class InternalStreamsBuilder implements InternalNameProvider {
         final String storeName = materialized.storeName();
         final KTableSource<K, V> tableSource = new KTableSource<>(storeName, storeName);
 
-        final ProcessorParameters<K, V> processorParameters = new ProcessorParameters<>(tableSource, processorName);
+        final ProcessorParameters<K, V, ?, ?> processorParameters = new ProcessorParameters<>(tableSource, processorName);
 
         final TableSourceNode<K, V> tableSourceNode = TableSourceNode.<K, V>tableSourceNodeBuilder()
             .withTopic(topic)
@@ -385,6 +385,11 @@ public class InternalStreamsBuilder implements InternalNameProvider {
                     parentNode.removeChild(repartitionNodeToBeReplaced);
                 }
                 repartitionNodeToBeReplaced.clearChildren();
+
+                // if replaced repartition node is part of any copartition group,
+                // we need to update it with the new node name so that co-partitioning won't break.
+                internalTopologyBuilder.maybeUpdateCopartitionSourceGroups(repartitionNodeToBeReplaced.nodeName(),
+                                                                           optimizedSingleRepartition.nodeName());
 
                 LOG.debug("Updated node {} children {}", optimizedSingleRepartition, optimizedSingleRepartition.children());
             }
